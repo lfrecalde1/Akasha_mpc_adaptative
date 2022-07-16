@@ -126,21 +126,17 @@ for k = 1:1:length(t)-N
     q4p_c(k) = control(1, 6);
     vref(:,k) = [u_c(k);w_c(k);q1p_c(k);q2p_c(k);q3p_c(k);q4p_c(k)];
     
-    %% System Evolution
-%     v(:,k+1) = AKASHA_DINAMICA(vref(1:5,k),v(:,k),h(4:7,k),t_s);
+    %% System integration
     h(:,k+1) = system_akasha(h(:,k), [vref(1:5,k);q4p_c(k)], t_s, L);
-%     h(:, k+1) = system_akasha(h(:,k), vref(:,k), t_s, L);
     
-    %% System movil estimation 
-%     xp = v(1, k+1)*cos(h(4,k+1))-a*v(2, k+1)*sin(h(4,k+1));
-%     yp = v(1, k+1)*sin(h(4,k+1))+a*v(2, k+1)*cos(h(4,k+1));
-    
-    xp = u_c(k)*cos(h(4,k+1))-a*w_c()*sin(h(4,k+1));
+    %% Proyection base
+    xp = u_c(k)*cos(h(4,k+1))-a*w_c(k)*sin(h(4,k+1));
+    yp = u_c(k)*sin(h(4,k+1))+a*w_c(k)*cos(h(4,k+1));
     
     %% Forward kinematics mobile robot
     x(k+1) =  t_s*xp + x(k);   
     y(k+1) =  t_s*yp + y(k);
-    th(k+1) = t_s*v(2, k+1) + th(k);
+    th(k+1) = t_s*w_c(k) + th(k);
     
     %% End effector point
     xs(k+1) = x(k+1) + a*cos(th(k+1))+cos(h(5,k+1)+th(k+1))*(l2*cos(h(6,k+1))+l3*cos(h(6,k+1)+h(7,k+1))+l4*cos(h(6,k+1)+h(7,k+1)+h(8,k+1)));

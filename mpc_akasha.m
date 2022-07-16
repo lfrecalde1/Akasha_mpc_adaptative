@@ -175,7 +175,7 @@ end
 % Cost final 
 Q = 1*eye(size(he_space,1));
 Q_internal = 0.1*eye(size(h_internal,1));
-R = 0.1*eye(size(u,1));
+R = 0.001*eye(size(u,1));
 
 
 % FINAL COST

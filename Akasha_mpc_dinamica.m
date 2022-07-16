@@ -41,6 +41,8 @@ q2p = 0;
 q3p = 0;
 q4p = 0;
 
+%% General vector of dynamic velocities of the system
+v=[u(1);w(1);q1p(1);q2p(1);q3p(1)];
 
 %% Forward Kinematics
 xs(1) = x(1) + a*cos(th)+cos(q1+th)*(l2*cos(q2)+l3*cos(q2+q3)+l4*cos(q2+q3+q4));
@@ -69,8 +71,8 @@ h = [xs(1);...
      q4];
 
 %% Desired trajectory of the system
-hxd = 3.5*cos(0.05*t)+1.75;    hxd_p = -3.5*0.05*sin(0.05*t);      
-hyd = 3.5*sin(0.05*t)+1.75;    hyd_p =  3.5*0.05*cos(0.05*t);     
+hxd = 3.5*cos(0.1*t)+1.75;    hxd_p = -3.5*0.1*sin(0.1*t);      
+hyd = 3.5*sin(0.1*t)+1.75;    hyd_p =  3.5*0.1*cos(0.1*t);     
 hzd = 0.15*sin(0.5*t)+0.6;     hzd_p =  0.15*0.5*cos(0.5*t); 
 
 
@@ -122,14 +124,15 @@ for k = 1:1:length(t)-N
     q2p_c(k) = control(1, 4);
     q3p_c(k) = control(1, 5);
     q4p_c(k) = control(1, 6);
-    vref = [u_c(k);w_c(k);q1p_c(k);q2p_c(k);q3p_c(k);q4p_c(k)];
+    vref(:,k) = [u_c(k);w_c(k);q1p_c(k);q2p_c(k);q3p_c(k);q4p_c(k)];
     
     %% System Evolution
-    h(:,k+1) = system_akasha(h(:,k), vref, t_s, L);
+    v(:,k+1) = AKASHA_DINAMICA(vref(1:5,k),v(:,k),h(4:7,k),t_s);
+    h(:,k+1) = system_akasha(h(:,k), [v(:,k+1);q4p_c(k)], t_s, L);
     
-    %% System movil estimation 
-    xp = u_c(k)*cos(h(4,k+1))-a*w_c(k)*sin(h(4,k+1));
-    yp = u_c(k)*sin(h(4,k+1))+a*w_c(k)*cos(h(4,k+1));
+    % Base proyection 
+    xp = v(1, k+1)*cos(h(4,k+1))-a*v(2, k+1)*sin(h(4,k+1));
+    yp = v(1, k+1)*sin(h(4,k+1))+a*v(2, k+1)*cos(h(4,k+1));
     
     %% Forward kinematics mobile robot
     x(k+1) =  t_s*xp + x(k);   
@@ -148,6 +151,12 @@ for k = 1:1:length(t)-N
     H0 = [H0(2:end,:);H0(end,:)];
     toc
 end
+
+
+%% Square error calculation
+error_x =  trapz(t_s,he(1,:).^2)
+error_y =  trapz(t_s,he(2,:).^2)
+error_z =  trapz(t_s,he(3,:).^2)
 
 close all; paso=1; 
 %% Parametros del cuadro de animacion
